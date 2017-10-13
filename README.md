@@ -1,4 +1,4 @@
-# DeepLearnigCaroloCup
+# DeepLearningCaroloCup
 Code for CaroloCup.
 This repo contains code that was first written for the CaroloCup 2016 for end-to-end steering. It has been It has updated to work with Tensorflow 1.3 and modified as a classification model to train the available dataset. 
 
