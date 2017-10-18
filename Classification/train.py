@@ -17,7 +17,7 @@ image_reshaped = tf.reshape(processed_image_batch, [batch_size,image_height,imag
 conv2d_layer_one = tf.contrib.layers.convolution2d(
                                           image,
                                           num_outputs=16,
-                                          ksizeernel_size=(4,4),
+                                          kernel_size=(4,4),
                                           activation_fn=tf.nn.relu,
                                           weights_initializer=tf.contrib.layers.xavier_initializer(),
                                           stride=(2, 2),
