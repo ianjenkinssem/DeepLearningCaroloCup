@@ -1,5 +1,5 @@
 import tensorflow as tf 
-from readtfrecord import readRecord
+from readRecord import readRecord
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 
