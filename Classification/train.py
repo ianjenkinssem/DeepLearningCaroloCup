@@ -1,18 +1,18 @@
 import tensorflow as tf 
-from readtfrecord import readRecord
+from readRecord import readRecord
+from imageProcessing import get_bb_batch
 training_steps = 100
 learning_rate = 0.5
 batch_size = 5
-image_height = 600
-image_width = 960
+image_height = 300
+image_width = 480
 image_channels = 1
 
 image, labels, bbox = readRecord(batch_size)
+processed_image_batch = get_bb_batch(image, bbox, batch_size)
 
 #begin Model--
-float_image_batch = tf.image.convert_image_dtype(image, tf.float32)
-
-image_reshaped = tf.reshape(image, [batch_size,image_height,image_width,image_channels]) 
+image_reshaped = tf.reshape(processed_image_batch, [batch_size,image_height,image_width,image_channels]) 
 
 conv2d_layer_one = tf.contrib.layers.convolution2d(
                                           image,

@@ -9,7 +9,7 @@ def readRecord(batch_Size):
   _batch_size = batch_Size
   _capacity = _min_after_dequeue + 5 * _batch_size
 
-  tf_record_filename_queue = tf.train.string_input_producer(["./TFRecord/trainingdata.tfrecord"])
+  tf_record_filename_queue = tf.train.string_input_producer(["./TFRecord/trainingdata200.tfrecord"])
 
   tf_record_reader = tf.TFRecordReader()
 
