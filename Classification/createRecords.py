@@ -5,14 +5,16 @@ import tensorflow as tf
 
 #--- This file will read labels from a .csv and images from a path and write them as a TFRecord (binary).
 #Labels file format in csv form dataset
-# xmin,xmax,ymin,ymax,Frame,Label,Preview URL
+#xmin,ymin,xmax,ymax,Frame,Label,Preview URL
 #785,533,905,644,1479498371963069978.jpg,Car,http://crowdai.com/images/Wwj-gorOCisE7uxA/visualize
 
-FILEPATH_LABELS = ".\dataset\labels.csv"
-FILEPATH_IMAGE = ".\dataset\*.jpg"
+FILEPATH_LABELS = ".\object-detection-crowdai\labels.csv"
+FILEPATH_IMAGE = ".\object-detection-crowdai\*.jpg"
 RECORD_DEFAULTS = [[1], [1], [1], [1], [""], [""], [""]]
-RECORD_LENGTH = 9423 #total samples in dataset
-
+RECORD_LENGTH = 500 #total samples in dataset
+TRAIN_END = int(0.6*RECORD_LENGTH)
+VAL_END = int(0.8*RECORD_LENGTH)
+TEST_END = RECORD_LENGTH
 def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
@@ -40,8 +42,11 @@ image_reader = tf.WholeFileReader()
 _, image_file = image_reader.read(filename_queue_image)
 
 image_decoded = tf.image.decode_jpeg(image_file, channels=3, ratio=2)
+print("image_decoded_shape", image_decoded.get_shape())
 
 greyscale_image = _rgb_to_greyscale(image_decoded)
+
+print("shape", greyscale_image.get_shape())
 #end
 
 #begin Label Pipeline---´
@@ -53,18 +58,73 @@ _, value = reader.read(filename_queue, name="labels")
 
 xmin, xmax, ymin, ymax, frame, label, url = _decode_csv(value, record_defaults=RECORD_DEFAULTS)
 
+# convert class names to a 0 based class index.    
+label_number = tf.to_int32(tf.argmax(tf.to_int32(tf.stack([        
+  														tf.equal(label, ["Car"]),        
+  														tf.equal(label, ["Truck"]),        
+  														tf.equal(label, ["Pedestrian"])    
+  														])), 0))
+
 BBFeatures = tf.stack([xmin, xmax, ymin, ymax])
 #end
 
 with tf.Session() as sess:
 	
 	sess.run(tf.local_variables_initializer())
+	
 	coord = tf.train.Coordinator()
 	threads = tf.train.start_queue_runners(coord=coord)
 	
-	writer = tf.python_io.TFRecordWriter("./tfrecord/trainingdata9423.tfrecord")
-	
-	for i in range(RECORD_LENGTH):
+	writer = tf.python_io.TFRecordWriter("./tfrecord/trainingdata.tfrecord")
+	for i in range(0,TRAIN_END):
+		print("wrting record : ", i+1)
+
+		BBoxes, framelabel = sess.run([BBFeatures, label])
+		
+		rawImage = sess.run(greyscale_image)
+
+		image_bytes = rawImage.tobytes()
+		
+		# Create TFRecord
+		record = tf.train.Example(features=tf.train.Features(feature={
+		'xmin': _int64_feature(BBoxes[0]),
+		'xmax': _int64_feature(BBoxes[1]),
+		'ymin': _int64_feature(BBoxes[2]),
+		'ymax': _int64_feature(BBoxes[3]),
+		'label': _bytes_feature(framelabel),
+		'imageframe': _bytes_feature(image_bytes)
+		}))
+
+		writer.write(record.SerializeToString())
+	writer.close()
+
+
+	writer = tf.python_io.TFRecordWriter("./tfrecord/valdata.tfrecord")
+	for i in range(TRAIN_END,VAL_END):
+		print("wrting record : ", i+1)
+
+		BBoxes, framelabel = sess.run([BBFeatures, label])
+		
+		rawImage = sess.run(greyscale_image)
+
+		image_bytes = rawImage.tobytes()
+		
+		# Create TFRecord
+		record = tf.train.Example(features=tf.train.Features(feature={
+		'xmin': _int64_feature(BBoxes[0]),
+		'xmax': _int64_feature(BBoxes[1]),
+		'ymin': _int64_feature(BBoxes[2]),
+		'ymax': _int64_feature(BBoxes[3]),
+		'label': _bytes_feature(framelabel),
+		'imageframe': _bytes_feature(image_bytes)
+		}))
+
+		writer.write(record.SerializeToString())
+	writer.close()
+
+	writer = tf.python_io.TFRecordWriter("./tfrecord/testdata.tfrecord")
+
+	for i in range(VAL_END,TEST_END):
 		print("wrting record : ", i+1)
 
 		BBoxes, framelabel = sess.run([BBFeatures, label])
