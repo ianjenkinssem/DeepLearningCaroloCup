@@ -1,14 +1,13 @@
 import tensorflow as tf 
 from readRecord import readRecord
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
+#import matplotlib.image as mpimg
+#import matplotlib.pyplot as plt
 
 batch_size = 5
-training_steps = 10
-FILEPATH_IMAGE = "car.jpg"
+training_steps = 1
 # xmin,ymin,xmax,ymax,Frame,Label,Preview URL
 #785,533,905,644,1479498371963069978.jpg,Car,http://crowdai.com/images/Wwj-gorOCisE7uxA/visualize
-image, labels, bbox = readRecord(batch_size)
+#image, labels, bbox = readRecord(batch_size)
 
 def _filename_queue(path):
   return tf.train.string_input_producer([path])
@@ -21,8 +20,8 @@ def createBBoxes(bboxwhole, elem):
   full = bboxwhole
   offset_height = full[elem][YMIN]
   offset_width = full[elem][XMIN]
-  target_height = full[elem][YMAX] - offset_height
-  target_width = full[elem][XMAX] - offset_width
+  target_height = full[elem][YMAX] - offset_height +1
+  target_width = full[elem][XMAX] - offset_width 
   
   return offset_height, offset_width, target_height, target_width, full
 
@@ -39,8 +38,8 @@ def pad_croppedbb(image):
     image,
     offset_height = 0,
     offset_width = 0,
-    target_height = 300,
-    target_width = 480
+    target_height = 600,
+    target_width = 960
 )
 
 def get_bb_batch(image, bbox_batch, batch_size):
@@ -51,7 +50,7 @@ def get_bb_batch(image, bbox_batch, batch_size):
     return cropped_image
 
 
-with tf.Session() as sess:
+#with tf.Session() as sess:
   tf.global_variables_initializer().run()
   # Coordinate the loading of image files.
   coord = tf.train.Coordinator()
